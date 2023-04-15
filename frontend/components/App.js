@@ -8,27 +8,59 @@ export default class App extends React.Component {
     super()
     this.state = {
       todos: [],
-
+      error: '',
+      todoNameInput: ''
+      
     }
   }
+  setError = (err) => {
+    this.setState({...this.state, error: err.response.data.message}) 
+  }
+
+  resetForm = () => {
+    this.setState({...this.state, todoNameInput: ''})
+  }
+
+  todoInputChange = evt => {
+    const { value } = evt.target
+    this.setState({...this.state, todoNameInput: value})
+  }
+
+  postNewTodo = () => {
+    axios.post(URL, {name: this.state.todoNameInput})
+    .then(res => {
+      this.fetchAllTodos()
+      this.resetForm()
+    })
+    .catch(err => {
+      this.setError(err)
+    })
+  }
+
+  todoFormSubmit = (e) => {
+    e.preventDefault()
+    this.postNewTodo()
+  }
+
   fetchAllTodos = () => {
     axios.get(URL)
     .then(res => {
       this.setState({...this.state,todos: res.data.data})
     })
     .catch(err => {
-      debugger
+      this.setError(err)
     })
   }
+
   componentDidMount(){
     this.fetchAllTodos()
     
   }
+  
   render() {
-    console.log(this.state.todos)
     return (
       <div>
-        <div id='error'>Error: No Error Here</div>
+        <div id='error'>{this.state.error}</div>
         <div id='todos'>
           <h2>Todos:</h2>
           {
@@ -36,8 +68,8 @@ export default class App extends React.Component {
             return <div key={todo.id}>{todo.name}<br/></div> 
           })}
         </div>
-        <form id='todoForm'>
-          <input type='text' placeholder='Type Todo'/>
+        <form onSubmit={this.todoFormSubmit} id='todoForm'>
+          <input value={this.state.todoNameInput} onChange={this.todoInputChange} type='text' placeholder='Type Todo'/>
           <input type="submit"/>
           <button >Clear Completed</button>
         </form>
